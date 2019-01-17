@@ -1,0 +1,67 @@
+---
+- hosts: all
+  name: PHP Installation
+  #ansible_become: true
+  #ansible_become_method: sudo
+  #ansible_become_pass: pass
+
+  vars_prompt:
+    - name: "Version"
+      prompt: "what php version to install (5.6/7.0/7.2/all)"
+      default: "all"
+      private: no
+
+  vars: 
+    - version: "{{Version}}" 
+
+
+  tasks:
+          # - name: Check if connection is possible
+          # command: ssh -o User={{ ansible_user }} -o ConnectTimeout=10 -o PreferredAuthentications=publickey -o PubkeyAuthentication=yes {{ inventory_hostname }} echo "Worked"
+          # register: result
+          # connection: local
+          # ignore_errors: yes
+          # changed_when: False
+
+    - name: PHP | Install Ondrej PHP PPA
+      apt_repository: 
+        repo='ppa:ondrej/php' update_cache=yes
+      become: true
+
+    - name: install php-5.6
+      apt: 
+        name: php5.6  
+        state: present
+      when: version = 5.6
+      become: true
+
+    - name: install php-7.0
+      apt:
+         name: php7.0 
+         state: present
+         when: version = 7.0
+      become: true
+
+    - name: install php-7.2
+      apt:
+         name: php7.2 
+         state: present
+      tags: 
+        - packages
+      when: version = 7.2
+      become: true
+
+    - name: install all php packages
+      apt: 
+         name: "{{ items }}" 
+         state: present
+      vars:
+        items:
+        - php5.6      
+        - php7.0
+        - php7.2
+      tags:
+        - packages
+      when: version = "all"
+      become: true
+      
